@@ -1,8 +1,9 @@
 import streamlit as st
-import yfinance as yf
 import plotly.express as px
-import pandas as pd
 from datetime import date
+
+from src.data_loader import download_stock_data
+from src.metrics import calculate_daily_return
 
 
 st.set_page_config(
@@ -43,46 +44,77 @@ load_data = st.sidebar.button("Load data")
 if load_data:
     if start_date >= end_date:
         st.error("Start date must be earlier than end date.")
+
     else:
         st.subheader(f"Historical Stock Data: {ticker}")
 
-        data = yf.download(
-            ticker,
-            start=start_date,
-            end=end_date,
-            auto_adjust=True,
-            progress=False
+        data = download_stock_data(
+            ticker=ticker,
+            start_date=start_date,
+            end_date=end_date
         )
-
-        # Some yfinance versions return multi-level columns.
-        # This keeps the app compatible with both formats.
-        if isinstance(data.columns, pd.MultiIndex):
-            data.columns = data.columns.get_level_values(0)
 
         if data.empty:
             st.error("No data found. Please check the ticker symbol or date range.")
+
         else:
+            data = calculate_daily_return(data)
+
             st.success("Data loaded successfully.")
+
+            # Key metrics
+            latest_close = data["Close"].iloc[-1]
+            latest_daily_return = data["Daily Return"].iloc[-1]
+
+            col1, col2 = st.columns(2)
+
+            col1.metric(
+                label="Latest Close Price",
+                value=f"${latest_close:,.2f}"
+            )
+
+            col2.metric(
+                label="Latest Daily Return",
+                value=f"{latest_daily_return:.2%}"
+            )
 
             st.write("### Data Preview")
             st.dataframe(data.tail())
 
             st.write("### Adjusted Closing Price")
 
-            fig = px.line(
+            price_fig = px.line(
                 data,
                 x=data.index,
                 y="Close",
                 title=f"{ticker} Adjusted Closing Price"
             )
 
-            fig.update_layout(
+            price_fig.update_layout(
                 xaxis_title="Date",
                 yaxis_title="Price",
                 height=500
             )
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(price_fig, use_container_width=True)
+
+            st.write("### Daily Returns")
+
+            returns_fig = px.line(
+                data,
+                x=data.index,
+                y="Daily Return",
+                title=f"{ticker} Daily Returns"
+            )
+
+            returns_fig.update_layout(
+                xaxis_title="Date",
+                yaxis_title="Daily Return",
+                yaxis_tickformat=".2%",
+                height=500
+            )
+
+            st.plotly_chart(returns_fig, use_container_width=True)
 
 else:
     st.info("Enter a ticker, select a date range, and click 'Load data'.")

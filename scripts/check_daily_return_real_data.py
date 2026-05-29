@@ -1,3 +1,5 @@
+# Manual test for calculating the Daily Returns
+
 from src.data_loader import download_stock_data
 from src.metrics import calculate_daily_return
 

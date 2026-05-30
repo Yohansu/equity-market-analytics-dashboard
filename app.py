@@ -3,7 +3,11 @@ import plotly.express as px
 from datetime import date
 
 from src.data_loader import download_stock_data
-from src.metrics import calculate_daily_return
+from src.metrics import (
+    calculate_daily_return,
+    calculate_cumulative_return,
+    calculate_total_return
+)
 
 
 st.set_page_config(
@@ -58,15 +62,20 @@ if load_data:
             st.error("No data found. Please check the ticker symbol or date range.")
 
         else:
+            # Calculate metrics
             data = calculate_daily_return(data)
+            data = calculate_cumulative_return(data)
+            total_return = calculate_total_return(data)
 
             st.success("Data loaded successfully.")
 
-            # Key metrics
+            # Latest values
             latest_close = data["Close"].iloc[-1]
             latest_daily_return = data["Daily Return"].iloc[-1]
+            latest_cumulative_return = data["Cumulative Return"].iloc[-1]
 
-            col1, col2 = st.columns(2)
+            # Metric cards
+            col1, col2, col3 = st.columns(3)
 
             col1.metric(
                 label="Latest Close Price",
@@ -78,9 +87,16 @@ if load_data:
                 value=f"{latest_daily_return:.2%}"
             )
 
+            col3.metric(
+                label="Total Cumulative Return",
+                value=f"{total_return:.2%}"
+            )
+
+            # Data preview
             st.write("### Data Preview")
             st.dataframe(data.tail())
 
+            # Price chart
             st.write("### Adjusted Closing Price")
 
             price_fig = px.line(
@@ -98,23 +114,43 @@ if load_data:
 
             st.plotly_chart(price_fig, use_container_width=True)
 
+            # Daily returns chart
             st.write("### Daily Returns")
 
-            returns_fig = px.line(
+            daily_return_fig = px.line(
                 data,
                 x=data.index,
                 y="Daily Return",
                 title=f"{ticker} Daily Returns"
             )
 
-            returns_fig.update_layout(
+            daily_return_fig.update_layout(
                 xaxis_title="Date",
                 yaxis_title="Daily Return",
                 yaxis_tickformat=".2%",
                 height=500
             )
 
-            st.plotly_chart(returns_fig, use_container_width=True)
+            st.plotly_chart(daily_return_fig, use_container_width=True)
+
+            # Cumulative return chart
+            st.write("### Cumulative Return")
+
+            cumulative_return_fig = px.line(
+                data,
+                x=data.index,
+                y="Cumulative Return",
+                title=f"{ticker} Cumulative Return"
+            )
+
+            cumulative_return_fig.update_layout(
+                xaxis_title="Date",
+                yaxis_title="Cumulative Return",
+                yaxis_tickformat=".2%",
+                height=500
+            )
+
+            st.plotly_chart(cumulative_return_fig, use_container_width=True)
 
 else:
     st.info("Enter a ticker, select a date range, and click 'Load data'.")

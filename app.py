@@ -6,7 +6,8 @@ from src.data_loader import download_stock_data
 from src.metrics import (
     calculate_daily_return,
     calculate_cumulative_return,
-    calculate_total_return
+    calculate_total_return,
+    calculate_annualized_return
 )
 
 
@@ -62,95 +63,131 @@ if load_data:
             st.error("No data found. Please check the ticker symbol or date range.")
 
         else:
-            # Calculate metrics
-            data = calculate_daily_return(data)
-            data = calculate_cumulative_return(data)
-            total_return = calculate_total_return(data)
+            try:
+                # Calculate metrics
+                data = calculate_daily_return(data)
+                data = calculate_cumulative_return(data)
+                total_return = calculate_total_return(data)
 
-            st.success("Data loaded successfully.")
+                # Annualized return is a scalar value.
+                # It requires at least 2 closing prices.
+                try:
+                    annualized_return = calculate_annualized_return(data)
+                except ValueError as error:
+                    annualized_return = None
+                    st.warning(str(error))
 
-            # Latest values
-            latest_close = data["Close"].iloc[-1]
-            latest_daily_return = data["Daily Return"].iloc[-1]
-            latest_cumulative_return = data["Cumulative Return"].iloc[-1]
+                st.success("Data loaded successfully.")
 
-            # Metric cards
-            col1, col2, col3 = st.columns(3)
+                # Trading periods
+                number_of_trading_periods = len(data) - 1
 
-            col1.metric(
-                label="Latest Close Price",
-                value=f"${latest_close:,.2f}"
-            )
+                if 0 < number_of_trading_periods < 63:
+                    st.warning(
+                        "The selected period contains fewer than 63 trading periods. "
+                        "Annualized return may be highly sensitive to short-term price movements."
+                    )
 
-            col2.metric(
-                label="Latest Daily Return",
-                value=f"{latest_daily_return:.2%}"
-            )
+                # Latest values
+                latest_close = data["Close"].iloc[-1]
+                latest_daily_return = data["Daily Return"].iloc[-1]
+                latest_cumulative_return = data["Cumulative Return"].iloc[-1]
 
-            col3.metric(
-                label="Total Cumulative Return",
-                value=f"{total_return:.2%}"
-            )
+                # Metric cards
+                col1, col2, col3, col4, col5 = st.columns(5)
 
-            # Data preview
-            st.write("### Data Preview")
-            st.dataframe(data.tail())
+                col1.metric(
+                    label="Latest Close Price",
+                    value=f"${latest_close:,.2f}"
+                )
 
-            # Price chart
-            st.write("### Adjusted Closing Price")
+                col2.metric(
+                    label="Latest Daily Return",
+                    value=f"{latest_daily_return:.2%}"
+                )
 
-            price_fig = px.line(
-                data,
-                x=data.index,
-                y="Close",
-                title=f"{ticker} Adjusted Closing Price"
-            )
+                col3.metric(
+                    label="Total Return",
+                    value=f"{total_return:.2%}"
+                )
 
-            price_fig.update_layout(
-                xaxis_title="Date",
-                yaxis_title="Price",
-                height=500
-            )
+                col4.metric(
+                    label="Annualized Return",
+                    value="N/A" if annualized_return is None else f"{annualized_return:.2%}"
+                )
 
-            st.plotly_chart(price_fig, use_container_width=True)
+                col5.metric(
+                    label="Trading Periods",
+                    value=f"{number_of_trading_periods}"
+                )
 
-            # Daily returns chart
-            st.write("### Daily Returns")
+                st.caption(
+                    "Annualized Return converts the selected period's total return "
+                    "into a yearly equivalent using 252 trading periods per year."
+                )
 
-            daily_return_fig = px.line(
-                data,
-                x=data.index,
-                y="Daily Return",
-                title=f"{ticker} Daily Returns"
-            )
+                # Data preview
+                st.write("### Data Preview")
+                st.dataframe(data.tail())
 
-            daily_return_fig.update_layout(
-                xaxis_title="Date",
-                yaxis_title="Daily Return",
-                yaxis_tickformat=".2%",
-                height=500
-            )
+                # Price chart
+                st.write("### Adjusted Closing Price")
 
-            st.plotly_chart(daily_return_fig, use_container_width=True)
+                price_fig = px.line(
+                    data,
+                    x=data.index,
+                    y="Close",
+                    title=f"{ticker} Adjusted Closing Price"
+                )
 
-            # Cumulative return chart
-            st.write("### Cumulative Return")
+                price_fig.update_layout(
+                    xaxis_title="Date",
+                    yaxis_title="Price",
+                    height=500
+                )
 
-            cumulative_return_fig = px.line(
-                data,
-                x=data.index,
-                y="Cumulative Return",
-                title=f"{ticker} Cumulative Return"
-            )
+                st.plotly_chart(price_fig, use_container_width=True)
 
-            cumulative_return_fig.update_layout(
-                xaxis_title="Date",
-                yaxis_title="Cumulative Return",
-                yaxis_tickformat=".2%",
-                height=500
-            )
+                # Daily returns chart
+                st.write("### Daily Returns")
 
-            st.plotly_chart(cumulative_return_fig, use_container_width=True)
+                daily_return_fig = px.line(
+                    data,
+                    x=data.index,
+                    y="Daily Return",
+                    title=f"{ticker} Daily Returns"
+                )
+
+                daily_return_fig.update_layout(
+                    xaxis_title="Date",
+                    yaxis_title="Daily Return",
+                    yaxis_tickformat=".2%",
+                    height=500
+                )
+
+                st.plotly_chart(daily_return_fig, use_container_width=True)
+
+                # Cumulative return chart
+                st.write("### Cumulative Return")
+
+                cumulative_return_fig = px.line(
+                    data,
+                    x=data.index,
+                    y="Cumulative Return",
+                    title=f"{ticker} Cumulative Return"
+                )
+
+                cumulative_return_fig.update_layout(
+                    xaxis_title="Date",
+                    yaxis_title="Cumulative Return",
+                    yaxis_tickformat=".2%",
+                    height=500
+                )
+
+                st.plotly_chart(cumulative_return_fig, use_container_width=True)
+
+            except (ValueError, KeyError) as error:
+                st.error(f"Unable to calculate metrics: {error}")
 
 else:
     st.info("Enter a ticker, select a date range, and click 'Load data'.")

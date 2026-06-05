@@ -1,8 +1,5 @@
 import pandas as pd
 
-<<<<<<< Updated upstream
-# Function to calculate the daily returns
-=======
 TRADING_DAYS_PER_YEAR = 252
 
 def validate_close_prices(data: pd.DataFrame) -> None:
@@ -34,7 +31,6 @@ def validate_close_prices(data: pd.DataFrame) -> None:
         raise ValueError("Close prices must be greater than zero.")
 
 
->>>>>>> Stashed changes
 def calculate_daily_return(data: pd.DataFrame) -> pd.DataFrame:
     data = data.copy()
     data["Daily Return"] = data["Close"].pct_change().fillna(0)

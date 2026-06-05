@@ -38,12 +38,16 @@ The tool is designed to help users:
 ## Current Features
 
 The current version includes:
-
-- Basic Streamlit application setup
+ 
+- Basic Streamlit dashboard layout
 - User input for stock ticker selection
-- Initial dashboard layout
-- Project environment configured with Python dependencies
-- Git and GitHub version control setup
+- Historical stock price download using `yfinance`
+- Adjusted closing price visualization
+- Daily return calculation
+- Cumulative return calculation
+- Total return calculation
+- Data validation for invalid closing prices
+- Unit tests for financial metrics using `pytest`
 
 ---
 
@@ -51,15 +55,14 @@ The current version includes:
 
 Future versions of the dashboard will include:
 
-- Historical stock price download using `yfinance`
-- Interactive price charts
-- Daily returns calculation
-- Cumulative returns calculation
+- Annualized return
 - Annualized volatility
 - Maximum drawdown
 - Benchmark comparison against SPY or other market ETFs
 - Multiple ticker comparison
 - Summary tables with key financial metrics
+- Moving averages
+- Export processed data to CSV
 - Interactive visualizations using Plotly
 
 ---
@@ -74,6 +77,7 @@ This project uses the following technologies:
 - NumPy
 - yfinance
 - Plotly
+- pytest
 - Git
 - GitHub
 
@@ -86,8 +90,24 @@ equity-market-analytics-dashboard/
 │
 ├── app.py
 ├── requirements.txt
+├── README.md
 ├── .gitignore
-└── README.md
+│
+├── src/
+│   ├── __init__.py
+│   ├── data_loader.py
+│   └── metrics.py
+│
+├── tests/
+│   ├── __init__.py
+│   └── test_metrics.py
+│   └── test_cumulative_return.py
+│   └── test_daily_return.py    
+│
+└── scripts/
+    ├── __init__.py
+    ├── check_daily_return_real_data.py
+    └── check_cumulative_return_real_data.py
 
 ```
 
@@ -148,6 +168,17 @@ Install the required dependencies:
 pip install -r requirements.txt
 ```
 
+---
+
+## Running Tests
+
+This project includes unit tests for the financial metrics.
+
+To run the tests, use:
+
+```bash
+python -m pytest tests/test_metrics.py -v
+```
 ---
 
 ## How to Run the App

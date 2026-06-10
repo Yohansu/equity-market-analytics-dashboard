@@ -86,3 +86,20 @@ def calculate_annualized_return(data: pd.DataFrame) -> float:
     ) - 1
 
     return annualized_return
+
+def calculate_annualized_volatility(data:pd.DataFrame) -> float:
+
+    validate_close_prices(data)
+
+    if len(data) < 2:
+        raise ValueError(
+            "At least two closing prices are required to calculate annualized volatility."
+        )
+
+    data = calculate_daily_return(data)
+
+    daily_return_std = data["Daily Return"].std()
+
+    annualized_volatility = daily_return_std * (TRADING_DAYS_PER_YEAR ** 0.5)
+
+    return annualized_volatility

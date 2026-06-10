@@ -6,7 +6,8 @@ from src.metrics import (
     calculate_daily_return,
     calculate_cumulative_return,
     calculate_total_return,
-    calculate_annualized_return
+    calculate_annualized_return,
+    calculate_annualized_volatility
 )
 
 
@@ -132,7 +133,20 @@ def test_calculate_annualized_return_for_different_periods(
 
     assert result == pytest.approx(expected_annualized_return)
 
+def test_calculate_annualized_volatility():
+    data = pd.DataFrame({
+        "Close": [100, 110, 121, 108.9]
+    })
 
+    result = calculate_annualized_volatility(data)
+
+    daily_return = calculate_daily_return(data)
+
+    total_d_return_std = daily_return["Daily Return"].std()
+
+    expected_annualized_volatility = total_d_return_std * (252 ** 0.5)
+
+    assert result == pytest.approx(expected_annualized_volatility)
 # ---------------------------------------------------------
 # Edge cases: invalid data
 # ---------------------------------------------------------

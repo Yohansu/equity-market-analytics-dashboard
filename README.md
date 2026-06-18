@@ -48,14 +48,14 @@ The current version includes:
 - Total return calculation
 - Data validation for invalid closing prices
 - Unit tests for financial metrics using `pytest`
-
+- Annualized return
+- Trading periods
 ---
 
 ## Planned Features
 
 Future versions of the dashboard will include:
 
-- Annualized return
 - Annualized volatility
 - Maximum drawdown
 - Benchmark comparison against SPY or other market ETFs

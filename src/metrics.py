@@ -1,7 +1,9 @@
 import pandas as pd
 
+# Glogabl variable that stores the number of trading days per year
 TRADING_DAYS_PER_YEAR = 252
 
+# Function to validate 'Close' prices
 def validate_close_prices(data: pd.DataFrame) -> None:
     """
     Validate that the input DataFrame contains usable closing prices.
@@ -30,7 +32,7 @@ def validate_close_prices(data: pd.DataFrame) -> None:
     if (data["Close"] <= 0).any():
         raise ValueError("Close prices must be greater than zero.")
 
-
+# Function to calculate daily return
 def calculate_daily_return(data: pd.DataFrame) -> pd.DataFrame:
     validate_close_prices(data)
 
@@ -57,7 +59,7 @@ def calculate_total_return(data: pd.DataFrame) -> float:
 
     return total_return
 
-
+# Function to calculate annualized return
 def calculate_annualized_return(data: pd.DataFrame) -> float:
     """
     Calculate the annualized return for the selected period.
@@ -87,6 +89,7 @@ def calculate_annualized_return(data: pd.DataFrame) -> float:
 
     return annualized_return
 
+# Function to calculate annualized volatility
 def calculate_annualized_volatility(data:pd.DataFrame) -> float:
 
     validate_close_prices(data)

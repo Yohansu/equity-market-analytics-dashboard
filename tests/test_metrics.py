@@ -109,6 +109,8 @@ def test_calculate_annualized_return_with_one_trading_year():
         (504, 100, 140),   # Approximately 2 trading years
     ]
 )
+
+
 def test_calculate_annualized_return_for_different_periods(
     trading_periods,
     initial_price,
@@ -133,6 +135,7 @@ def test_calculate_annualized_return_for_different_periods(
 
     assert result == pytest.approx(expected_annualized_return)
 
+
 def test_calculate_annualized_volatility():
     data = pd.DataFrame({
         "Close": [100, 110, 121, 108.9]
@@ -142,11 +145,13 @@ def test_calculate_annualized_volatility():
 
     daily_return = calculate_daily_return(data)
 
-    total_d_return_std = daily_return["Daily Return"].std()
+    daily_return_std = daily_return["Daily Return"].std()
 
-    expected_annualized_volatility = total_d_return_std * (252 ** 0.5)
+    expected_annualized_volatility = daily_return_std * (252 ** 0.5)
 
     assert result == pytest.approx(expected_annualized_volatility)
+
+
 # ---------------------------------------------------------
 # Edge cases: invalid data
 # ---------------------------------------------------------
@@ -154,6 +159,7 @@ def test_calculate_annualized_volatility():
 # when the input data is invalid.
 
 
+# Test for when dataframe is empty
 def test_raises_error_when_dataframe_is_empty():
     data = pd.DataFrame()
 
@@ -161,6 +167,7 @@ def test_raises_error_when_dataframe_is_empty():
         calculate_daily_return(data)
 
 
+# Test for when 'Close' column is missing
 def test_raises_error_when_close_column_is_missing():
     data = pd.DataFrame({
         "Price": [100, 110, 121]
@@ -170,6 +177,7 @@ def test_raises_error_when_close_column_is_missing():
         calculate_daily_return(data)
 
 
+# Test for when 'Close' column contains missing values
 def test_raises_error_when_close_contains_missing_values():
     data = pd.DataFrame({
         "Close": [100, None, 121]
@@ -179,6 +187,7 @@ def test_raises_error_when_close_contains_missing_values():
         calculate_daily_return(data)
 
 
+# Test for when 'Close' column contains zero
 def test_raises_error_when_close_contains_zero():
     data = pd.DataFrame({
         "Close": [100, 0, 121]
@@ -188,6 +197,7 @@ def test_raises_error_when_close_contains_zero():
         calculate_daily_return(data)
 
 
+# Test for when initial 'Close' column value is zero
 def test_raises_error_when_initial_close_is_zero_for_cumulative_return():
     data = pd.DataFrame({
         "Close": [0, 100, 121]
@@ -197,6 +207,7 @@ def test_raises_error_when_initial_close_is_zero_for_cumulative_return():
         calculate_cumulative_return(data)
 
 
+# Test for when there is a zero is the first value of the 'Close' column when calculating total return
 def test_raises_error_when_initial_close_is_zero_for_total_return():
     data = pd.DataFrame({
         "Close": [0, 100, 121]
@@ -206,6 +217,17 @@ def test_raises_error_when_initial_close_is_zero_for_total_return():
         calculate_total_return(data)
 
 
+# Test for when the 'Close' column contains zero when calculating annualized volatility
+def test_calculate_annualized_volatility_raises_error_when_close_contains_zero():
+    data = pd.DataFrame({
+        "Close": [100, 0, 121]
+    })
+
+    with pytest.raises(ValueError, match="Close prices must be greater than zero"):
+        calculate_annualized_volatility(data)
+
+
+# Test for when the 'Close' column contains negative values
 def test_raises_error_when_close_contains_negative_values():
     data = pd.DataFrame({
         "Close": [100, -50, 121]
@@ -215,6 +237,7 @@ def test_raises_error_when_close_contains_negative_values():
         calculate_daily_return(data)
 
 
+# Test for when 'Close' column contains a single price
 def test_calculate_annualized_return_raises_error_with_single_price():
     # Annualized return needs at least 2 closing prices.
     # With only 1 closing price, there are 0 trading periods.
@@ -229,12 +252,29 @@ def test_calculate_annualized_return_raises_error_with_single_price():
         calculate_annualized_return(data)
 
 
+# Test for when there is only a single price when calculating annualized volatility
+def test_calculate_annualized_volatility_raises_error_with_single_price():
+
+    data = pd.DataFrame({
+        "Close": [100]
+    })
+
+    with pytest.raises(
+        ValueError,
+        match="At least two closing prices are required to calculate annualized volatility."
+    ):
+        calculate_annualized_volatility(data)
+
+
+
+
 # ---------------------------------------------------------
 # Edge cases: valid but special data
 # ---------------------------------------------------------
 # These are unusual cases, but they should still work.
 
 
+# Test for when the daily return is calculated with a single price
 def test_daily_return_with_single_price():
     data = pd.DataFrame({
         "Close": [100]
@@ -254,6 +294,7 @@ def test_daily_return_with_single_price():
     )
 
 
+# Test for when the cumulative return is calculated with a single price
 def test_cumulative_return_with_single_price():
     data = pd.DataFrame({
         "Close": [100]
@@ -273,6 +314,7 @@ def test_cumulative_return_with_single_price():
     )
 
 
+# Test for when total return is calculated with a single price
 def test_total_return_with_single_price():
     data = pd.DataFrame({
         "Close": [100]
@@ -283,6 +325,7 @@ def test_total_return_with_single_price():
     assert result == pytest.approx(0.0)
 
 
+# Test for when there are constant prices
 def test_returns_with_constant_prices():
     data = pd.DataFrame({
         "Close": [100, 100, 100, 100]
@@ -315,3 +358,14 @@ def test_returns_with_constant_prices():
     )
 
     assert total_result == pytest.approx(0.0)
+
+
+#Test for when there are constant prices for calculating annualized volatility
+def test_annualized_volatility_with_single_price():
+    data = pd.DataFrame({
+        "Close": [100, 100, 100, 100]
+    })
+
+    result = calculate_annualized_volatility(data)
+
+    assert result == pytest.approx(0.0)

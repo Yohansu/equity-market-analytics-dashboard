@@ -7,7 +7,8 @@ from src.metrics import (
     calculate_daily_return,
     calculate_cumulative_return,
     calculate_total_return,
-    calculate_annualized_return
+    calculate_annualized_return,
+    calculate_annualized_volatility
 )
 
 
@@ -77,6 +78,14 @@ if load_data:
                     annualized_return = None
                     st.warning(str(error))
 
+                # Annualized volatility is a scalar value.
+                # It measures the annualized dispersion of daily returns.
+                try:
+                    annualized_volatility = calculate_annualized_volatility(data)
+                except ValueError as error:
+                    annualized_volatility = None
+                    st.warning(str(error))
+
                 st.success("Data loaded successfully.")
 
                 # Trading periods
@@ -85,16 +94,16 @@ if load_data:
                 if 0 < number_of_trading_periods < 63:
                     st.warning(
                         "The selected period contains fewer than 63 trading periods. "
-                        "Annualized return may be highly sensitive to short-term price movements."
+                        "Annualized return and annualized volatility may be highly "
+                        "sensitive to short-term price movements."
                     )
 
                 # Latest values
                 latest_close = data["Close"].iloc[-1]
                 latest_daily_return = data["Daily Return"].iloc[-1]
-                latest_cumulative_return = data["Cumulative Return"].iloc[-1]
 
                 # Metric cards
-                col1, col2, col3, col4, col5 = st.columns(5)
+                col1, col2, col3 = st.columns(3)
 
                 col1.metric(
                     label="Latest Close Price",
@@ -107,23 +116,40 @@ if load_data:
                 )
 
                 col3.metric(
-                    label="Total Return",
-                    value=f"{total_return:.2%}"
-                )
-
-                col4.metric(
-                    label="Annualized Return",
-                    value="N/A" if annualized_return is None else f"{annualized_return:.2%}"
-                )
-
-                col5.metric(
                     label="Trading Periods",
                     value=f"{number_of_trading_periods}"
                 )
 
+                col4, col5, col6 = st.columns(3)
+
+                col4.metric(
+                    label="Total Return",
+                    value=f"{total_return:.2%}"
+                )
+
+                col5.metric(
+                    label="Annualized Return",
+                    value=(
+                        "N/A"
+                        if annualized_return is None
+                        else f"{annualized_return:.2%}"
+                    )
+                )
+
+                col6.metric(
+                    label="Annualized Volatility",
+                    value=(
+                        "N/A"
+                        if annualized_volatility is None
+                        else f"{annualized_volatility:.2%}"
+                    )
+                )
+
                 st.caption(
                     "Annualized Return converts the selected period's total return "
-                    "into a yearly equivalent using 252 trading periods per year."
+                    "into a yearly equivalent using 252 trading periods per year. "
+                    "Annualized Volatility converts the standard deviation of daily "
+                    "returns into a yearly risk estimate using sqrt(252)."
                 )
 
                 # Data preview
@@ -131,13 +157,13 @@ if load_data:
                 st.dataframe(data.tail())
 
                 # Price chart
-                st.write("### Adjusted Closing Price")
+                st.write("### Adjusted Closing Prices")
 
                 price_fig = px.line(
                     data,
                     x=data.index,
                     y="Close",
-                    title=f"{ticker} Adjusted Closing Price"
+                    title=f"{ticker} Adjusted Closing Prices"
                 )
 
                 price_fig.update_layout(

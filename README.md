@@ -50,20 +50,21 @@ The current version includes:
 - Unit tests for financial metrics using `pytest`
 - Annualized return
 - Trading periods
+- Annualized volatility
+- Summary tables with key financial metrics
+- Interactive visualizations using Plotly
+
 ---
 
 ## Planned Features
 
 Future versions of the dashboard will include:
 
-- Annualized volatility
 - Maximum drawdown
 - Benchmark comparison against SPY or other market ETFs
 - Multiple ticker comparison
-- Summary tables with key financial metrics
 - Moving averages
 - Export processed data to CSV
-- Interactive visualizations using Plotly
 
 ---
 

@@ -53,6 +53,7 @@ The current version includes:
 - Annualized volatility
 - Summary tables with key financial metrics
 - Interactive visualizations using Plotly
+- Maximum drawdown
 
 ---
 
@@ -60,7 +61,6 @@ The current version includes:
 
 Future versions of the dashboard will include:
 
-- Maximum drawdown
 - Benchmark comparison against SPY or other market ETFs
 - Multiple ticker comparison
 - Moving averages

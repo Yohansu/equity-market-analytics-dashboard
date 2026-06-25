@@ -8,7 +8,8 @@ from src.metrics import (
     calculate_cumulative_return,
     calculate_total_return,
     calculate_annualized_return,
-    calculate_annualized_volatility
+    calculate_annualized_volatility,
+    calculate_maximum_drawdown
 )
 
 
@@ -16,6 +17,48 @@ st.set_page_config(
     page_title="Equity Market Analytics Dashboard",
     layout="wide"
 )
+
+
+st.markdown(
+    """
+    <style>
+    .short-period-metric-card {
+        background-color: rgba(255, 193, 7, 0.18);
+        border: 1px solid rgba(255, 193, 7, 0.45);
+        border-left: 0.35rem solid rgba(255, 193, 7, 0.85);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        min-height: 7rem;
+    }
+
+    .short-period-metric-label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .short-period-metric-value {
+        font-size: 2.25rem;
+        line-height: 1.1;
+        font-weight: 400;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+def display_short_period_metric(label: str, value: str) -> None:
+    st.markdown(
+        f"""
+        <div class="short-period-metric-card">
+            <div class="short-period-metric-label">{label}</div>
+            <div class="short-period-metric-value">{value}</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 st.title("Equity Market Analytics Dashboard")
 
@@ -68,7 +111,9 @@ if load_data:
                 # Calculate metrics
                 data = calculate_daily_return(data)
                 data = calculate_cumulative_return(data)
+
                 total_return = calculate_total_return(data)
+                maximum_drawdown = calculate_maximum_drawdown(data)
 
                 # Annualized return is a scalar value.
                 # It requires at least 2 closing prices.
@@ -90,8 +135,9 @@ if load_data:
 
                 # Trading periods
                 number_of_trading_periods = len(data) - 1
+                short_period_warning = 0 < number_of_trading_periods < 63
 
-                if 0 < number_of_trading_periods < 63:
+                if short_period_warning:
                     st.warning(
                         "The selected period contains fewer than 63 trading periods. "
                         "Annualized return and annualized volatility may be highly "
@@ -102,8 +148,20 @@ if load_data:
                 latest_close = data["Close"].iloc[-1]
                 latest_daily_return = data["Daily Return"].iloc[-1]
 
+                annualized_return_value = (
+                    "N/A"
+                    if annualized_return is None
+                    else f"{annualized_return:.2%}"
+                )
+
+                annualized_volatility_value = (
+                    "N/A"
+                    if annualized_volatility is None
+                    else f"{annualized_volatility:.2%}"
+                )
+
                 # Metric cards
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3, col4 = st.columns(4)
 
                 col1.metric(
                     label="Latest Close Price",
@@ -116,40 +174,53 @@ if load_data:
                 )
 
                 col3.metric(
-                    label="Trading Periods",
-                    value=f"{number_of_trading_periods}"
-                )
-
-                col4, col5, col6 = st.columns(3)
-
-                col4.metric(
                     label="Total Return",
                     value=f"{total_return:.2%}"
                 )
 
-                col5.metric(
-                    label="Annualized Return",
-                    value=(
-                        "N/A"
-                        if annualized_return is None
-                        else f"{annualized_return:.2%}"
-                    )
+                col4.metric(
+                    label="Trading Periods",
+                    value=f"{number_of_trading_periods}"
                 )
 
-                col6.metric(
-                    label="Annualized Volatility",
-                    value=(
-                        "N/A"
-                        if annualized_volatility is None
-                        else f"{annualized_volatility:.2%}"
-                    )
+                col5, col6, col7 = st.columns(3)
+
+                with col5:
+                    if short_period_warning:
+                        display_short_period_metric(
+                            label="Annualized Return",
+                            value=annualized_return_value
+                        )
+                    else:
+                        st.metric(
+                            label="Annualized Return",
+                            value=annualized_return_value
+                        )
+
+                with col6:
+                    if short_period_warning:
+                        display_short_period_metric(
+                            label="Annualized Volatility",
+                            value=annualized_volatility_value
+                        )
+                    else:
+                        st.metric(
+                            label="Annualized Volatility",
+                            value=annualized_volatility_value
+                        )
+
+                col7.metric(
+                    label="Maximum Drawdown",
+                    value=f"{maximum_drawdown:.2%}"
                 )
 
                 st.caption(
                     "Annualized Return converts the selected period's total return "
                     "into a yearly equivalent using 252 trading periods per year. "
                     "Annualized Volatility converts the standard deviation of daily "
-                    "returns into a yearly risk estimate using sqrt(252)."
+                    "returns into a yearly risk estimate using sqrt(252). "
+                    "Maximum Drawdown measures the worst percentage decline from a "
+                    "previous peak during the selected period."
                 )
 
                 # Data preview

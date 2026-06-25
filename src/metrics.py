@@ -106,3 +106,17 @@ def calculate_annualized_volatility(data:pd.DataFrame) -> float:
     annualized_volatility = daily_return_std * (TRADING_DAYS_PER_YEAR ** 0.5)
 
     return annualized_volatility
+
+
+# Function to calculate the maximum drawdown
+def calculate_maximum_drawdown(data: pd.DataFrame) -> float:
+
+    validate_close_prices(data)
+
+    running_maximum = data["Close"].cummax()
+
+    drawdown = (data["Close"] / running_maximum) - 1
+
+    maximum_drawdown = drawdown.min()
+
+    return maximum_drawdown

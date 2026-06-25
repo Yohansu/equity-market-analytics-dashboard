@@ -7,8 +7,10 @@ from src.metrics import (
     calculate_cumulative_return,
     calculate_total_return,
     calculate_annualized_return,
-    calculate_annualized_volatility
+    calculate_annualized_volatility,
+    calculate_maximum_drawdown
 )
+from tests.prueba import running_maximum
 
 
 # ---------------------------------------------------------
@@ -150,6 +152,22 @@ def test_calculate_annualized_volatility():
     expected_annualized_volatility = daily_return_std * (252 ** 0.5)
 
     assert result == pytest.approx(expected_annualized_volatility)
+
+
+def test_calculate_maximum_drawdown():
+    data = pd.DataFrame({
+        "Close": [100, 110, 121, 108.9]
+    })
+
+    result = calculate_maximum_drawdown(data)
+
+    running_maximum = data["Close"].cummax()
+
+    drawdown = (data["Close"] / running_maximum) - 1
+
+    maximum_drawdown = drawdown.min()
+
+    assert result == pytest.approx(maximum_drawdown)
 
 
 # ---------------------------------------------------------
@@ -360,7 +378,7 @@ def test_returns_with_constant_prices():
     assert total_result == pytest.approx(0.0)
 
 
-#Test for when there are constant prices for calculating annualized volatility
+# Test for when there are constant prices for calculating annualized volatility
 def test_annualized_volatility_with_single_price():
     data = pd.DataFrame({
         "Close": [100, 100, 100, 100]
@@ -369,3 +387,17 @@ def test_annualized_volatility_with_single_price():
     result = calculate_annualized_volatility(data)
 
     assert result == pytest.approx(0.0)
+
+
+# Test for when there is a single price when calculating maximum drawdown
+def test_calculate_maximum_drawdown_with_single_price():
+
+    data = pd.DataFrame({
+        "Close": [100]
+    })
+
+    result = calculate_maximum_drawdown(data)
+
+    assert result == pytest.approx(0.0)
+
+
